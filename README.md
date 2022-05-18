@@ -1,4 +1,4 @@
-# Iguana Metaverse Contracts
+# IguVerse Contracts
 
 **The p2e game.**
 
