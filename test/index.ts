@@ -18,4 +18,17 @@ describe("GovToken", function () {
 
     expect(await govtoken.totalSupply()).to.equal(ethers.BigNumber.from("0"));
   });
+
+  it("Crowdsale process", async function () {
+    const GovTokenArtifact = await ethers.getContractFactory("GovToken");
+    const govtoken = await GovTokenArtifact.deploy();
+    await govtoken.deployed();
+
+    expect(await govtoken.totalSupply()).to.equal(initialSupply);
+
+    const burnTx = await govtoken.burn(initialSupply);
+    await burnTx.wait();
+
+    expect(await govtoken.totalSupply()).to.equal(ethers.BigNumber.from("0"));
+  });
 });

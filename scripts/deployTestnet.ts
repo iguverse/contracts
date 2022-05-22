@@ -13,14 +13,17 @@ async function main() {
   await vesting.deployed();
   console.log("Vesting deployed to:", vesting.address);
 
+  // tBUSD
+  const BusdArtifact = await ethers.getContractFactory("tBUSD");
+  const tbusd = await BusdArtifact.deploy();
+  await tbusd.deployed();
+  console.log("BUSD deployed to:", tbusd.address);
+
   // Crowdsale
   const CrowdsaleDepositArtifact = await ethers.getContractFactory(
     "CrowdsaleDeposit"
   );
-  const crowdsale = await CrowdsaleDepositArtifact.deploy(
-    "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
-    false
-  );
+  const crowdsale = await CrowdsaleDepositArtifact.deploy(tbusd.address, false);
   await crowdsale.deployed();
   console.log("Crowdsale deployed to:", crowdsale.address);
 }

@@ -56,6 +56,22 @@ const config: HardhatUserConfig = {
           process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
       },
     },
+    bsctestnet: {
+      url: process.env.BSCTESTNET_URL || "",
+      chainId: 97,
+      accounts: {
+        mnemonic:
+          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
+      },
+    },
+    bscmainnet: {
+      url: process.env.BSCMAINNET_URL || "",
+      chainId: 56,
+      accounts: {
+        mnemonic:
+          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
+      },
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
