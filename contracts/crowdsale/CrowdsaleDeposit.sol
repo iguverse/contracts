@@ -12,9 +12,10 @@ contract CrowdsaleDeposit is Ownable{
 
     event Deposit(address indexed sender, uint256 amount);
 
-    constructor (IERC20 paymentTokenP, bool disabledP){
+    constructor (IERC20 paymentTokenP, bool disabledP, address newOnwer){
         paymentToken = paymentTokenP;
         disabled = disabledP;
+        _transferOwnership(newOnwer);
     }
 
     function deposit(uint256 amount) external{
