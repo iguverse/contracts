@@ -21,6 +21,7 @@ contract CrowdsaleDeposit is Ownable{
         paymentToken.transferFrom(msg.sender, address(this), amount);
         depositOf[msg.sender]+=amount;
         deposited+=amount;
+        emit Deposit(msg.sender, amount);
     }
 
     function setStatus(bool status) external onlyOwner{
