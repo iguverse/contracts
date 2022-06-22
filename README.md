@@ -52,3 +52,7 @@ Documentation files will appear in the `/docs` folder, open `index.html` in a br
    ```
    npx hardhat run --network fantomtestnet scripts/deployTestnet.ts
    ```
+
+### Remix
+
+remixd -s ~/Projects/iguverse-contracts --remix-ide https://remix.ethereum.org
