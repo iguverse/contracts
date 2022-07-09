@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "docgen": "npx hardhat docgen",
     "node": "npx hardhat node",
-    "local": "npx hardhat run --network localhost scripts/deployTestnet.ts",
+    "local": "npx hardhat run --network localhost scripts/deploy.ts",
     "testnet": "npx hardhat run --network bsctestnet scripts/deployTestnet.ts",
     "bscmainnet": "npx hardhat run --network bscmainnet scripts/deploy.ts"
   },
