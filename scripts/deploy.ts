@@ -1,6 +1,8 @@
 import { ethers } from "hardhat";
 
 async function main() {
+  const signer = await ethers.provider.getSigner().getAddress();
+
   // Gov Token
   const GovTokenArtifact = await ethers.getContractFactory("GovToken");
   const govtoken = await GovTokenArtifact.deploy();
@@ -23,6 +25,17 @@ async function main() {
   );
   await crowdsale.deployed();
   console.log("Crowdsale deployed to:", crowdsale.address);
+
+  // Iguverse NFT
+  const IguverseArtifact = await ethers.getContractFactory("Iguverse");
+  const iguverse = await IguverseArtifact.deploy(
+    "Iguverse NFT",
+    "IGU",
+    "http://localhost:3000/",
+    signer
+  );
+  await iguverse.deployed();
+  console.log("Iguverse NFT deployed to:", iguverse.address);
 }
 
 main().catch((error) => {
