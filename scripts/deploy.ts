@@ -31,7 +31,7 @@ async function main() {
   const iguverse = await IguverseArtifact.deploy(
     "Iguverse NFT",
     "IGU",
-    "http://localhost:3000/",
+    "http://localhost:8080/nft/",
     signer
   );
   await iguverse.deployed();
