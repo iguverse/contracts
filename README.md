@@ -1,6 +1,6 @@
 # IguVerse Contracts
 
-**The p2e game.**
+IguVerse is the first blockchain game that links Socialize to Earn, Move to Earn, and Play to Earn mechanics into one gamified app. Mint NFT from your own pet photo or buy a virtual one from marketplace. Collect rewards for different activities such as sharing your pet photos on Instagram and TikTok or walking with your pet.
 
 ---
 
