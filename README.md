@@ -39,7 +39,7 @@ Documentation files will appear in the `/docs` folder, open `index.html` in a br
    npm run node
    ```
 
-   Open **second terminal **window and deploy contracts:
+   Open **second terminal** window and deploy contracts:
 
    ```
    npm run local
