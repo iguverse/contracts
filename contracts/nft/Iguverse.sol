@@ -17,7 +17,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
     error CallerIsNotOwner(uint256 tokenId);
     error PaymentTokenTransferError(address from, address to, uint256 amount);
 
-    event Executed(address indexed executor, uint256 indexed nonce);
+    event TokensMinted(uint256 indexed nonce, address indexed executor, uint256 startTokenId, uint256 tokensToMint);
 
     constructor(
         string memory name_,
@@ -51,70 +51,6 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
             return true;
         }
         return super.isApprovedForAll(owner, operator);
-    }
-
-    function getHash(
-        uint256[] memory tokensToBurn,
-        uint256 tokensToMint,
-        address ptFromAccount,
-        address[] memory ptFromAccountReceivers,
-        uint256[] memory fromAccountAmounts,
-        address ptFromContract,
-        address[] memory ptFromContractReceivers,
-        uint256[] memory fromContractAmounts,
-        address executor,
-        uint256 nonce,
-        uint256 deadline
-    ) public pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    tokensToBurn,
-                    tokensToMint,
-                    ptFromAccount,
-                    ptFromAccountReceivers,
-                    fromAccountAmounts,
-                    ptFromContract,
-                    ptFromContractReceivers,
-                    fromContractAmounts,
-                    executor,
-                    nonce,
-                    deadline
-                )
-            );
-    }
-
-    function getEthHash(
-        uint256[] memory tokensToBurn,
-        uint256 tokensToMint,
-        address ptFromAccount,
-        address[] memory ptFromAccountReceivers,
-        uint256[] memory fromAccountAmounts,
-        address ptFromContract,
-        address[] memory ptFromContractReceivers,
-        uint256[] memory fromContractAmounts,
-        address executor,
-        uint256 nonce,
-        uint256 deadline
-    ) public pure returns (bytes32) {
-        return
-            ECDSA.toEthSignedMessageHash(
-                keccak256(
-                    abi.encodePacked(
-                        tokensToBurn,
-                        tokensToMint,
-                        ptFromAccount,
-                        ptFromAccountReceivers,
-                        fromAccountAmounts,
-                        ptFromContract,
-                        ptFromContractReceivers,
-                        fromContractAmounts,
-                        executor,
-                        nonce,
-                        deadline
-                    )
-                )
-            );
     }
 
     function execTransaction(
@@ -162,7 +98,9 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
             }
         }
         if (tokensToMint != 0) {
-            _safeMint(msg.sender, tokensToMint);
+            uint256 currentIndex =_nextTokenId();
+            _mint(msg.sender, tokensToMint);
+            emit TokensMinted(nonce, msg.sender, currentIndex, tokensToMint);
         }
         if (
             (ptFromAccountReceivers.length != 0) &&
@@ -227,8 +165,6 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
                 }
             }
         }
-
-        emit Executed(msg.sender, nonce);
     }
 
     function safeMint(address to, uint256 quantity) external onlyOwner {
