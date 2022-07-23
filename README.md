@@ -1,6 +1,6 @@
 # IguVerse Contracts
 
-**The p2e game.**
+IguVerse is the first blockchain game that links Socialize to Earn, Move to Earn, and Play to Earn mechanics into one gamified app. Mint NFT from your own pet photo or buy a virtual one from marketplace. Collect rewards for different activities such as sharing your pet photos on Instagram and TikTok or walking with your pet.
 
 ---
 
@@ -39,7 +39,7 @@ Documentation files will appear in the `/docs` folder, open `index.html` in a br
    npm run node
    ```
 
-   Open **second terminal **window and deploy contracts:
+   Open **second terminal** window and deploy contracts:
 
    ```
    npm run local
