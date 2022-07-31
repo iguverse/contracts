@@ -78,7 +78,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
 
     /// @notice Rewrites Signer Address
     /// @param newSigner new singer's address
-    /// @dev All signatures made by the old signer will no longer be valid. Only Owner can execute this function
+    /// @dev Only Owner can execute this function
     function editSigner(address newSigner) external onlyOwner {
         signerRole = newSigner;
     }
@@ -107,7 +107,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
     /// @param fromContractAmounts `ptFromContract` Amounts array 
     /// @param nonce Uniqe id of transaction
     /// @param deadline Unix Timestamp after which the transaction cannot be executed
-    /// @param signature A signature of transaction parameters with the private key of a valid minter
+    /// @param signature A signature of transaction parameters with the private key of a valid signer
     /// @dev address(0) is used to set native currency as ptFromAccount or ptFromContract.
     function execTransaction(
         uint256[] memory tokensToBurn,
