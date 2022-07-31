@@ -8,16 +8,46 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+/// @title Iguverse NFT Contract
+/// @notice ERC721(ERC721A-Quaryable) Standart Tokens Contract
 contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
     using ECDSA for bytes32;
+    
+    /// @dev Token Base Uri, can be changed by owner
     string private uriBase;
+
+    /// @notice Returns true if nonce is used
     mapping(uint256 => bool) public isNonceUsed;
+
+    /// @notice Signer address
+    /// @dev Used by backend, can be changed by owner
     address public signerRole;
 
     error CallerIsNotOwner(uint256 tokenId);
     error PaymentTokenTransferError(address from, address to, uint256 amount);
 
+    /// @notice Emitted when new tokens are minted
+    /// @param nonce Unique transaction id
+    /// @param executor Address of transaction executor
+    /// @param startTokenId First minted token's id
+    /// @param tokensToMint Number of created tokens
     event TokensMinted(uint256 indexed nonce, address indexed executor, uint256 startTokenId, uint256 tokensToMint);
+
+    /// @notice Emitted when tokens are burned
+    /// @param nonce Unique transaction id
+    /// @param executor Address of transaction executor
+    /// @param tokensToBurn Array of tokens are burned
+    event TokensBurned(uint256 indexed nonce, address indexed executor, uint256[] tokensToBurn);
+
+    /// @notice Emitted when transferring tokens or native currency in transaction
+    /// @param nonce Unique transaction id
+    /// @param executor Address of transaction executor
+    /// @param tokenAddress Address of ERC20 token transferred 
+    /// @param isFromContract True, if funds are transferred from the contract address
+    /// @param receivers Receivers array
+    /// @param amounts Amounts array
+    /// @dev address(0) is used for native currency in tokenAddress.
+    event FundsTransfer(uint256 indexed nonce, address indexed executor, address indexed tokenAddress, bool isFromContract, address[] receivers, uint256[] amounts);
 
     constructor(
         string memory name_,
@@ -29,18 +59,31 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
         signerRole = signer;
     }
 
+    /// @dev Returns Base Uri
     function _baseURI() internal view override returns (string memory) {
         return uriBase;
     }
 
+    /// @notice Returns Base Uri
+    function baseTokenURI() public view returns (string memory) {
+        return uriBase;
+    }
+
+    /// @notice Rewrites Base Uri
+    /// @param baseUri_ new base uri
+    /// @dev Only Owner can execute this function
     function editBaseUri(string memory baseUri_) external onlyOwner {
         uriBase = baseUri_;
     }
 
+    /// @notice Rewrites Signer Address
+    /// @param newSigner new singer's address
+    /// @dev All signatures made by the old signer will no longer be valid. Only Owner can execute this function
     function editSigner(address newSigner) external onlyOwner {
         signerRole = newSigner;
     }
 
+    /// @dev See {IERC721-isApprovedForAll}
     function isApprovedForAll(address owner, address operator)
         public
         view
@@ -53,6 +96,19 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
         return super.isApprovedForAll(owner, operator);
     }
 
+    /// @notice Executes a multipurpose transaction
+    /// @param tokensToBurn Token ids array to be burned
+    /// @param tokensToMint Number of tokens to mint
+    /// @param ptFromAccount Address of ERC20 token to transfer from executor address
+    /// @param ptFromAccountReceivers `ptFromAccount` Receivers Addresses array 
+    /// @param fromAccountAmounts `ptFromAccount` Amounts array 
+    /// @param ptFromContract Address of ERC20 token to transfer from contract addresss
+    /// @param ptFromContractReceivers `ptFromContract` Receivers Addresses array 
+    /// @param fromContractAmounts `ptFromContract` Amounts array 
+    /// @param nonce Uniqe id of transaction
+    /// @param deadline Unix Timestamp after which the transaction cannot be executed
+    /// @param signature A signature of transaction parameters with the private key of a valid minter
+    /// @dev address(0) is used to set native currency as ptFromAccount or ptFromContract.
     function execTransaction(
         uint256[] memory tokensToBurn,
         uint256 tokensToMint,
@@ -96,6 +152,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
                     revert CallerIsNotOwner(tokensToBurn[i]);
                 _burn(tokensToBurn[i]);
             }
+            emit TokensBurned(nonce, msg.sender, tokensToBurn);
         }
         if (tokensToMint != 0) {
             uint256 currentIndex =_nextTokenId();
@@ -136,6 +193,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
                         );
                 }
             }
+            emit FundsTransfer(nonce, msg.sender, ptFromAccount, false, ptFromAccountReceivers, fromAccountAmounts);
         }
         if (
             (ptFromContractReceivers.length != 0) &&
@@ -164,24 +222,34 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
                         );
                 }
             }
+            emit FundsTransfer(nonce, msg.sender, ptFromContract, true, ptFromContractReceivers, fromContractAmounts);
         }
     }
 
+    /// @notice Mints `quantity` tokens to `to` address
+    /// @dev Only Owner can execute this function
     function safeMint(address to, uint256 quantity) external onlyOwner {
         _safeMint(to, quantity);
     }
 
-    function withdrawTokens(address tokenAdddress, uint256 amount)
+    /// @notice Withdraws `amount` amount of `tokenAddress` ERC20 token to owner's address
+    /// @param tokenAddress Address of ERC20 token
+    /// @param amount Amount of ERC20 token to withdraw
+    /// @dev Only Owner can execute this function
+    function withdrawTokens(address tokenAddress, uint256 amount)
         external
         onlyOwner
     {
         require(
-            IERC20(tokenAdddress).transfer(msg.sender, amount),
+            IERC20(tokenAddress).transfer(msg.sender, amount),
             "Iguverse: transfer error"
         );
     }
 
-    function withdrawETH(uint256 amount) external onlyOwner {
+    /// @notice Withdraws `amount` amount of native currency to owner's address
+    /// @param amount Amount of native currency to withdraw
+    /// @dev Only Owner can execute this function
+    function withdraw(uint256 amount) external onlyOwner {
         require(payable(msg.sender).send(amount));
     }
 }
