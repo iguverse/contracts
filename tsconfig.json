@@ -1,12 +1,29 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
-    "outDir": "dist",
-    "declaration": true
+      "target": "es2018",
+      "module": "commonjs",
+      "strict": true,
+      "esModuleInterop": true,
+      "outDir": "dist",
+      "declaration": true,
+      "noImplicitAny": false,
+      "noImplicitThis": true,
+      "noImplicitReturns": true,
+      "strictNullChecks": false,
+      "baseUrl": ".",
+      "paths": {
+          "@/*": [
+              "artifacts/*",
+              "typechain/*"
+          ]
+      }
   },
-  "include": ["./scripts", "./test", "./typechain"],
-  "files": ["./hardhat.config.ts"]
+  "include": [
+      "./scripts",
+      "./test",
+      "./typechain"
+  ],
+  "files": [
+      "./hardhat.config.ts"
+  ]
 }
