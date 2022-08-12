@@ -207,7 +207,9 @@ describe("Igu ERC20 token vesting", function () {
 
         it("Should return proper amount available to claim", async () => {
           expect(await contract.available(alice.address, 0)).to.equal(0);
-          expect(await contract.available(bob.address, 0)).to.equal(0);
+          expect(await contract.available(bob.address, 0)).to.equal(
+            ethers.utils.parseEther("5")
+          );
         });
       });
     });
@@ -247,9 +249,12 @@ describe("Igu ERC20 token vesting", function () {
     });
 
     describe("before vesting started", () => {
-      it("Should revert with VestingNotStartedYet error", async () => {
-        await expect(contract.connect(alice).withdraw(0)).to.be.revertedWith(
-          "VestingNotStartedYet()"
+      it("Should return proper amount available to claim (initial unlock)", async () => {
+        expect(await contract.available(alice.address, 0)).to.be.equal(
+          ethers.utils.parseEther("0")
+        );
+        expect(await contract.available(bob.address, 0)).to.be.equal(
+          ethers.utils.parseEther("5")
         );
       });
     });

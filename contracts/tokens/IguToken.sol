@@ -6,6 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
 contract IguToken is ERC20, ERC20Burnable {
     constructor() ERC20("IGU Token", "IGU") {
-        _mint(msg.sender, 1000000000 ether);
+        _mint(msg.sender, 400000000 ether);
     }
 }

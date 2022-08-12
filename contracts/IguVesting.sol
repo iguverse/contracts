@@ -79,28 +79,28 @@ contract IguVesting is
         if (vesting.vestingAmount == 0) {
             return 0;
         }
+
         if (block.timestamp < vesting.timestampStart) {
             return 0;
         }
 
         if (block.timestamp >= vesting.timestampEnd) {
             // in case of exceeding end time
-            return vesting.vestingAmount;
+            return vesting.vestingAmount-vesting.activationAmount;
         }
 
         uint256 vestingAmount = vesting.vestingAmount - vesting.activationAmount;
         uint256 vestingPeriod = vesting.timestampEnd - vesting.timestampStart;
-
         uint256 timeSinceVestingStart = uint64(block.timestamp) - vesting.timestampStart;
-
-        uint256 vestedAmount = vestingAmount * timeSinceVestingStart / vestingPeriod;
-        return vestedAmount + vesting.activationAmount;
+        uint256 unlockedAmount = vestingAmount * timeSinceVestingStart / vestingPeriod;
+        return unlockedAmount;
     }
 
     /**
      * @notice Returns amount available to claim
      * @param _address Owner account
      * @param _slot Vesting slot
+     * @return amount available to withdraw
      */
     function available(
         address _address,
@@ -111,7 +111,8 @@ contract IguVesting is
         returns (uint256)
     {
         Vesting memory vesting = _vesting[_address][_slot];
-        return _vestedAmount(vesting) - vesting.claimedAmount;
+        uint256 unlocked = vesting.activationAmount + _vestedAmount(vesting);
+        return unlocked - vesting.claimedAmount;
     }
 
     /**
@@ -185,9 +186,6 @@ contract IguVesting is
 
         if (vesting.vestingAmount == 0) {
             revert VestingNotFound();
-        }
-        if (block.timestamp < vesting.timestampStart) {
-            revert VestingNotStartedYet();
         }
 
         uint256 toWithdraw = available(msg.sender, _slot);
