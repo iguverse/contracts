@@ -23,6 +23,8 @@ contract TokenDistributor is Ownable {
         token = _token;
     }
 
+    event Collected(address indexed receiver, uint256 amount, uint256 nonce);
+
     /// @notice Rewrites Signer Address
     /// @param _newSigner new singers's address
     /// @dev All signatures made by the old singer will no longer be valid. Only Owner can execute this function
@@ -59,6 +61,8 @@ contract TokenDistributor is Ownable {
             pureHash.toEthSignedMessageHash().recover(signature) == singer,
             "TokenDisributor: Signature Mismatch"
         );
+
+        emit Collected(receiver, amount, nonce);
 
         token.transfer(receiver, amount);
     }
