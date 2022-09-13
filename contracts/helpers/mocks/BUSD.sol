@@ -9,4 +9,8 @@ contract tBUSD is ERC20, ERC20Burnable {
         _mint(0x4A6c62FeF99642171341dD8419Ed98173cae6412, 5000000 ether);
         _mint(msg.sender, 5000000 ether);
     }
+
+    function returnOne() external pure returns(uint256){
+        return 1;
+    }
 }
