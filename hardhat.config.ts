@@ -54,30 +54,6 @@ const config: HardhatUserConfig = {
           process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
       },
     },
-    rinkeby: {
-      url: process.env.RINKEBY_URL || "",
-      chainId: 4,
-      accounts: {
-        mnemonic:
-          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
-      },
-    },
-    fantom: {
-      url: process.env.FANTOM_URL || "",
-      chainId: 250,
-      accounts: {
-        mnemonic:
-          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
-      },
-    },
-    fantomtestnet: {
-      url: process.env.FANTOMTESTNET_URL || "",
-      chainId: 4002,
-      accounts: {
-        mnemonic:
-          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
-      },
-    },
     bsctestnet: {
       url: process.env.BSCTESTNET_URL || "",
       chainId: 97,
@@ -104,28 +80,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      fantom: process.env.FTMSCAN_API_KEY,
-      fantomtestnet: process.env.FTMSCAN_API_KEY,
-      rinkeby: process.env.ETHERSCAN_API_KEY,
+      bscTestnet: process.env.BSCSCAN_API_KEY,
+      bscMainnet: process.env.BSCSCAN_API_KEY,
     },
-    customChains: [
-      {
-        network: "fantomtestnet",
-        chainId: 4002,
-        urls: {
-          apiURL: "https://api-testnet.ftmscan.com/api",
-          browserURL: "https://testnet.ftmscan.com",
-        },
-      },
-      {
-        network: "fantom",
-        chainId: 250,
-        urls: {
-          apiURL: "https://api.ftmscan.com/api",
-          browserURL: "https://ftmscan.com",
-        },
-      },
-    ],
   },
   docgen: {
     path: "./docs",
