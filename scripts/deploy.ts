@@ -1,41 +1,30 @@
 import { ethers } from "hardhat";
+import { deployAndVerify } from "./helpers/utils";
 
 async function main() {
   const signer = await ethers.provider.getSigner().getAddress();
 
-  // Gov Token
-  const GovTokenArtifact = await ethers.getContractFactory("IguToken");
-  const govtoken = await GovTokenArtifact.deploy();
-  await govtoken.deployed();
-  console.log("GovToken deployed to:", govtoken.address);
+  // Igu Token
+  const iguToken = await deployAndVerify("IguToken", [], false);
 
   // Vesting
-  const VestingArtifact = await ethers.getContractFactory("IguVesting");
-  const vesting = await VestingArtifact.deploy(govtoken.address);
-  await vesting.deployed();
-  console.log("Vesting deployed to:", vesting.address);
+  await deployAndVerify("IguVesting", [iguToken.address], false);
 
-  // Crowdsale
-  const CrowdsaleDepositArtifact = await ethers.getContractFactory(
-    "CrowdsaleDeposit"
-  );
-  const crowdsale = await CrowdsaleDepositArtifact.deploy(
-    "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
-    false
-  );
-  await crowdsale.deployed();
-  console.log("Crowdsale deployed to:", crowdsale.address);
+  // tBUSD
+  await deployAndVerify("tBUSD", [], false);
 
   // Iguverse NFT
-  const IguverseArtifact = await ethers.getContractFactory("Iguverse");
-  const iguverse = await IguverseArtifact.deploy(
+  const iguverseNFTParams = [
     "Iguverse NFT",
     "IGU",
-    "http://localhost:8080/nft/",
-    signer
-  );
-  await iguverse.deployed();
-  console.log("Iguverse NFT deployed to:", iguverse.address);
+    "https://backend.stage.igumetinfra.net/nft/",
+    signer,
+  ];
+  await deployAndVerify("Iguverse", iguverseNFTParams, false);
+
+  // Distributor
+  const distributorParams = [signer, iguToken.address];
+  await deployAndVerify("TokenDistributor", distributorParams, false);
 }
 
 main().catch((error) => {
