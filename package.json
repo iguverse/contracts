@@ -9,11 +9,11 @@
     "lint": "solhint 'contracts/*.sol'",
     "lint:fix": "solhint 'contracts/**/*.sol' --fix",
     "format": "prettier --write .",
-    "docgen": "npx hardhat docgen",
+    "docgen": "npx hardhat docgen && npx hardhat export --export-all docs/contracts.json",
     "node": "npx hardhat node",
-    "local": "npx hardhat run --network localhost scripts/deploy.ts",
-    "testnet": "npx hardhat run --network bsctestnet scripts/deployTestnet.ts",
-    "bscmainnet": "npx hardhat run --network bscmainnet scripts/deploy.ts"
+    "mainnet": "npx hardhat deploy --network bsc",
+    "testnet": "npx hardhat deploy --network bsctestnet",
+    "verify": "npx hardhat --network bsctestnet etherscan-verify"
   },
   "author": "",
   "license": "ISC",
@@ -63,7 +63,9 @@
   },
   "dependencies": {
     "@ethersproject/contracts": "^5.6.2",
+    "@gregoranders/csv": "^0.0.9",
     "@openzeppelin/contracts": "^4.6.0",
+    "hardhat-deploy": "^0.11.15",
     "hardhat-docgen": "^1.3.0"
   }
 }

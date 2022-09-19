@@ -12,6 +12,7 @@ import "hardhat-docgen";
 import "hardhat-gas-reporter";
 import "hardhat-interface-generator";
 import "solidity-coverage";
+import "hardhat-deploy";
 
 dotenv.config();
 
@@ -47,28 +48,44 @@ const config: HardhatUserConfig = {
       },
     ],
   },
+  namedAccounts: {
+    deployer: 0,
+    signer: 1,
+  },
   networks: {
     hardhat: {
       accounts: {
         mnemonic:
-          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
+          process.env.MNEMONIC_TESTNET !== undefined
+            ? process.env.MNEMONIC_TESTNET
+            : "",
       },
+      saveDeployments: false,
+      deploy: ["deploy/bsc/"],
     },
     bsctestnet: {
       url: process.env.BSCTESTNET_URL || "",
       chainId: 97,
       accounts: {
         mnemonic:
-          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
+          process.env.MNEMONIC_TESTNET !== undefined
+            ? process.env.MNEMONIC_TESTNET
+            : "",
       },
+      saveDeployments: true,
+      deploy: ["deploy/bsc/"],
     },
-    bscmainnet: {
-      url: process.env.BSCMAINNET_URL || "",
+    bsc: {
+      url: process.env.BSC_URL || "",
       chainId: 56,
       accounts: {
         mnemonic:
-          process.env.MNEMONIC !== undefined ? process.env.MNEMONIC : "",
+          process.env.MNEMONIC_MAINNET !== undefined
+            ? process.env.MNEMONIC_MAINNET
+            : "",
       },
+      saveDeployments: true,
+      deploy: ["deploy/bsc/"],
     },
   },
   gasReporter: {
@@ -80,8 +97,13 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      bscTestnet: process.env.BSCSCAN_API_KEY,
-      bscMainnet: process.env.BSCSCAN_API_KEY,
+      bsctestnet: process.env.BSCSCAN_API_KEY,
+      bsc: process.env.BSCSCAN_API_KEY,
+    },
+  },
+  verify: {
+    etherscan: {
+      apiKey: process.env.BSCSCAN_API_KEY,
     },
   },
   docgen: {

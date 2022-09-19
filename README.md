@@ -25,11 +25,14 @@ npm run test
 
 #### 4. Generate Documentation
 
+To create documentation run
 ```
 npm run docgen
 ```
 
 Documentation files will appear in the `/docs` folder, open `index.html` in a browser to read it.
+
+Also `/docs/contracts.json` file will be created which contains all deployed contract information (addresses, abis, etc);
 
 #### 5. Local migrations/local deployment
 
@@ -39,22 +42,29 @@ Documentation files will appear in the `/docs` folder, open `index.html` in a br
    npm run node
    ```
 
-   Open **second terminal** window and deploy contracts:
-
-   ```
-   npm run local
-   ```
+   It will run local virtual node and deploy contracts
 
 #### 6. Testnet/production deployment
 
    Make sure that first account (id[0]) for selected mnemonic has a native currency on selected network. Use a faucets for a testnets.
 
+   Testnet deployment:
    ```
-   npx hardhat run --network fantomtestnet scripts/deployTestnet.ts
+   npm run testnet
    ```
 
+   Production deployment (using MNEMONIC_MAINNET)
    ```
-   npx hardhat run --network bscmainnet scripts/deploy.ts
+   npm run mainnet
+   ```
+
+   Deployment info will store on deployments folder
+
+#### 7. Verifying on bscscan
+
+   To verify contracts on mainnet run: 
+   ```
+   npm run verify
    ```
 
 ### Remix

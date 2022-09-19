@@ -9,3 +9,5 @@ cache
 artifacts
 docs
 solt
+deployments/bsctestnet
+scripts/data/vesting.csv
