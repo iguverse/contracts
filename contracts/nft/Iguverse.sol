@@ -7,12 +7,28 @@ import "../helpers/erc1155a/extensions/ERC721ABurnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
 /// @title Iguverse NFT Contract
 /// @notice ERC721(ERC721A-Quaryable) Standart Tokens Contract
-contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
+contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
     using ECDSA for bytes32;
-    
+
+    struct ExecData {
+        uint256[] tokensToBurn;
+        uint256 tokensToMint;
+        address ptFromAccount;
+        address[] ptFromAccountReceivers;
+        uint256[] fromAccountAmounts;
+        address ptFromContract;
+        address[] ptFromContractReceivers;
+        uint256[] fromContractAmounts;
+        address executor;
+        uint256 nonce;
+        uint256 deadline;
+    }
+
     /// @dev Token Base Uri, can be changed by owner
     string private uriBase;
 
@@ -25,36 +41,53 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
 
     error CallerIsNotOwner(uint256 tokenId);
     error PaymentTokenTransferError(address from, address to, uint256 amount);
+    error BalanceBelowThenTransferredAmount();
 
     /// @notice Emitted when new tokens are minted
     /// @param nonce Unique transaction id
     /// @param executor Address of transaction executor
     /// @param startTokenId First minted token's id
     /// @param tokensToMint Number of created tokens
-    event TokensMinted(uint256 indexed nonce, address indexed executor, uint256 startTokenId, uint256 tokensToMint);
+    event TokensMinted(
+        uint256 indexed nonce,
+        address indexed executor,
+        uint256 startTokenId,
+        uint256 tokensToMint
+    );
 
     /// @notice Emitted when tokens are burned
     /// @param nonce Unique transaction id
     /// @param executor Address of transaction executor
     /// @param tokensToBurn Array of tokens are burned
-    event TokensBurned(uint256 indexed nonce, address indexed executor, uint256[] tokensToBurn);
+    event TokensBurned(
+        uint256 indexed nonce,
+        address indexed executor,
+        uint256[] tokensToBurn
+    );
 
     /// @notice Emitted when transferring tokens or native currency in transaction
     /// @param nonce Unique transaction id
     /// @param executor Address of transaction executor
-    /// @param tokenAddress Address of ERC20 token transferred 
+    /// @param tokenAddress Address of ERC20 token transferred
     /// @param isFromContract True, if funds are transferred from the contract address
     /// @param receivers Receivers array
     /// @param amounts Amounts array
     /// @dev address(0) is used for native currency in tokenAddress.
-    event FundsTransfer(uint256 indexed nonce, address indexed executor, address indexed tokenAddress, bool isFromContract, address[] receivers, uint256[] amounts);
+    event FundsTransfer(
+        uint256 indexed nonce,
+        address indexed executor,
+        address indexed tokenAddress,
+        bool isFromContract,
+        address[] receivers,
+        uint256[] amounts
+    );
 
     constructor(
         string memory name_,
         string memory symbol_,
         string memory baseUri_,
         address signer
-    ) ERC721A(name_, symbol_) {
+    ) ERC721A(name_, symbol_) EIP712("Iguverse", "1") {
         uriBase = baseUri_;
         signerRole = signer;
     }
@@ -81,19 +114,6 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
     /// @dev Only Owner can execute this function
     function editSigner(address newSigner) external onlyOwner {
         signerRole = newSigner;
-    }
-
-    /// @dev See {IERC721-isApprovedForAll}
-    function isApprovedForAll(address owner, address operator)
-        public
-        view
-        override(ERC721A)
-        returns (bool)
-    {
-        if (operator == address(this)) {
-            return true;
-        }
-        return super.isApprovedForAll(owner, operator);
     }
 
     /// @notice Executes a multipurpose transaction
@@ -123,26 +143,35 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
         bytes memory signature
     ) external payable {
         require(!isNonceUsed[nonce], "Iguverse: Nonce already used");
-        require(block.timestamp <= deadline, "Iguverse: Transaction overdue");
+        require(
+            block.timestamp <= deadline,
+            "Iguverse: Transaction overdue"
+        );
         isNonceUsed[nonce] = true;
 
-        bytes32 pureHash = keccak256(
-            abi.encodePacked(
-                tokensToBurn,
-                tokensToMint,
-                ptFromAccount,
-                ptFromAccountReceivers,
-                fromAccountAmounts,
-                ptFromContract,
-                ptFromContractReceivers,
-                fromContractAmounts,
-                msg.sender,
-                nonce,
-                deadline
+        bytes32 typedHash = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    keccak256(
+                        "ExecData(uint256[] tokensToBurn,uint256 tokensToMint,address ptFromAccount,address[] ptFromAccountReceivers,uint256[] fromAccountAmounts,address ptFromContract,address[] ptFromContractReceivers,uint256[] fromContractAmounts,address executor,uint256 nonce,uint256 deadline)"
+                    ),
+                    keccak256(abi.encodePacked(tokensToBurn)),
+                    tokensToMint,
+                    ptFromAccount,
+                    keccak256(abi.encodePacked(ptFromAccountReceivers)),
+                    keccak256(abi.encodePacked(fromAccountAmounts)),
+                    ptFromContract,
+                    keccak256(abi.encodePacked(ptFromContractReceivers)),
+                    keccak256(abi.encodePacked(fromContractAmounts)),
+                    msg.sender,
+                    nonce,
+                    deadline
+                )
             )
         );
+
         require(
-            pureHash.toEthSignedMessageHash().recover(signature) == signerRole,
+            ECDSA.recover(typedHash, signature) == signerRole,
             "Iguverse: Signature Mismatch"
         );
 
@@ -155,7 +184,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
             emit TokensBurned(nonce, msg.sender, tokensToBurn);
         }
         if (tokensToMint != 0) {
-            uint256 currentIndex =_nextTokenId();
+            uint256 currentIndex = _nextTokenId();
             _mint(msg.sender, tokensToMint);
             emit TokensMinted(nonce, msg.sender, currentIndex, tokensToMint);
         }
@@ -172,13 +201,20 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
                 require(msg.value >= sum, "Iguverse: Not enough BNB");
                 for (uint256 i = 0; i < ptFromAccountReceivers.length; i++) {
                     if (ptFromAccountReceivers[i] != address(this)) {
-                        payable(ptFromAccountReceivers[i]).transfer(
+                        Address.sendValue(
+                            payable(ptFromAccountReceivers[i]),
                             fromAccountAmounts[i]
                         );
                     }
                 }
             } else {
                 for (uint256 i = 0; i < ptFromAccountReceivers.length; i++) {
+                    if (
+                        IERC20(ptFromAccount).balanceOf(msg.sender) <
+                        fromAccountAmounts[i]
+                    ) {
+                        revert BalanceBelowThenTransferredAmount();
+                    }
                     if (
                         !IERC20(ptFromAccount).transferFrom(
                             msg.sender,
@@ -193,7 +229,14 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
                         );
                 }
             }
-            emit FundsTransfer(nonce, msg.sender, ptFromAccount, false, ptFromAccountReceivers, fromAccountAmounts);
+            emit FundsTransfer(
+                nonce,
+                msg.sender,
+                ptFromAccount,
+                false,
+                ptFromAccountReceivers,
+                fromAccountAmounts
+            );
         }
         if (
             (ptFromContractReceivers.length != 0) &&
@@ -201,13 +244,25 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
             (ptFromContractReceivers.length == fromContractAmounts.length)
         ) {
             if (ptFromContract == address(0)) {
+                uint256 sum;
                 for (uint256 i = 0; i < ptFromContractReceivers.length; i++) {
-                    payable(ptFromContractReceivers[i]).transfer(
+                    sum += fromContractAmounts[i];
+                }
+                require(address(this).balance >= sum, "Iguverse: Contract: Not enough BNB");
+                for (uint256 i = 0; i < ptFromContractReceivers.length; i++) {
+                    Address.sendValue(
+                        payable(ptFromContractReceivers[i]),
                         fromContractAmounts[i]
                     );
                 }
             } else {
                 for (uint256 i = 0; i < ptFromContractReceivers.length; i++) {
+                    if (
+                        IERC20(ptFromContract).balanceOf(address(this)) <
+                        fromContractAmounts[i]
+                    ) {
+                        revert BalanceBelowThenTransferredAmount();
+                    }
                     if (
                         !IERC20(ptFromContract).transferFrom(
                             address(this),
@@ -222,8 +277,18 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
                         );
                 }
             }
-            emit FundsTransfer(nonce, msg.sender, ptFromContract, true, ptFromContractReceivers, fromContractAmounts);
+            emit FundsTransfer(
+                nonce,
+                msg.sender,
+                ptFromContract,
+                true,
+                ptFromContractReceivers,
+                fromContractAmounts
+            );
         }
+    }
+
+    receive() external payable{
     }
 
     /// @notice Mints `quantity` tokens to `to` address
@@ -250,6 +315,6 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable {
     /// @param amount Amount of native currency to withdraw
     /// @dev Only Owner can execute this function
     function withdraw(uint256 amount) external onlyOwner {
-        require(payable(msg.sender).send(amount));
+        Address.sendValue(payable(msg.sender), amount);
     }
 }

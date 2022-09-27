@@ -12,6 +12,7 @@ contract IguVesting is
     error InsufficientBalanceOrAllowance(uint256 required);
     error VestingNotFound();
     error VestingNotStartedYet();
+    error ActivationAmountCantBeGreaterThanFullAmount();
 
 
     struct Vesting {
@@ -152,6 +153,10 @@ contract IguVesting is
 
             // increase required amount to transfer
             tokensSum += _amounts[i];
+
+            if(_initialUnlock[i] > _amounts[i]){
+                revert ActivationAmountCantBeGreaterThanFullAmount();
+            }
 
             Vesting memory vesting = Vesting(
                 _amounts[i],
