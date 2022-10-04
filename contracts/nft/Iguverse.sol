@@ -18,6 +18,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
     struct ExecData {
         uint256[] tokensToBurn;
         uint256 tokensToMint;
+        address mintReceiver;
         address ptFromAccount;
         address[] ptFromAccountReceivers;
         uint256[] fromAccountAmounts;
@@ -119,6 +120,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
     /// @notice Executes a multipurpose transaction
     /// @param tokensToBurn Token ids array to be burned
     /// @param tokensToMint Number of tokens to mint
+    /// @param mintReceiver Address - receiver of new minted tokens
     /// @param ptFromAccount Address of ERC20 token to transfer from executor address
     /// @param ptFromAccountReceivers `ptFromAccount` Receivers Addresses array 
     /// @param fromAccountAmounts `ptFromAccount` Amounts array 
@@ -132,6 +134,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
     function execTransaction(
         uint256[] memory tokensToBurn,
         uint256 tokensToMint,
+        address mintReceiver,
         address ptFromAccount,
         address[] memory ptFromAccountReceivers,
         uint256[] memory fromAccountAmounts,
@@ -142,6 +145,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
         uint256 deadline,
         bytes memory signature
     ) external payable {
+        require(mintReceiver != address(0), "Iguverse: Receiver address zero");
         require(!isNonceUsed[nonce], "Iguverse: Nonce already used");
         require(
             block.timestamp <= deadline,
@@ -153,10 +157,11 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
             keccak256(
                 abi.encode(
                     keccak256(
-                        "ExecData(uint256[] tokensToBurn,uint256 tokensToMint,address ptFromAccount,address[] ptFromAccountReceivers,uint256[] fromAccountAmounts,address ptFromContract,address[] ptFromContractReceivers,uint256[] fromContractAmounts,address executor,uint256 nonce,uint256 deadline)"
+                        "ExecData(uint256[] tokensToBurn,uint256 tokensToMint,address mintReceiver,address ptFromAccount,address[] ptFromAccountReceivers,uint256[] fromAccountAmounts,address ptFromContract,address[] ptFromContractReceivers,uint256[] fromContractAmounts,address executor,uint256 nonce,uint256 deadline)"
                     ),
                     keccak256(abi.encodePacked(tokensToBurn)),
                     tokensToMint,
+                    mintReceiver,
                     ptFromAccount,
                     keccak256(abi.encodePacked(ptFromAccountReceivers)),
                     keccak256(abi.encodePacked(fromAccountAmounts)),
@@ -184,9 +189,8 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
             emit TokensBurned(nonce, msg.sender, tokensToBurn);
         }
         if (tokensToMint != 0) {
-            uint256 currentIndex = _nextTokenId();
-            _mint(msg.sender, tokensToMint);
-            emit TokensMinted(nonce, msg.sender, currentIndex, tokensToMint);
+            _mint(mintReceiver, tokensToMint);
+            emit TokensMinted(nonce, mintReceiver, _nextTokenId(), tokensToMint);
         }
         if (
             (ptFromAccountReceivers.length != 0) &&
