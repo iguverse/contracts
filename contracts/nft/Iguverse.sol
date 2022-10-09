@@ -47,11 +47,13 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
     /// @notice Emitted when new tokens are minted
     /// @param nonce Unique transaction id
     /// @param executor Address of transaction executor
+    /// @param mintReceiver Address which receives minted tokens
     /// @param startTokenId First minted token's id
     /// @param tokensToMint Number of created tokens
     event TokensMinted(
         uint256 indexed nonce,
         address indexed executor,
+        address indexed mintReceiver,
         uint256 startTokenId,
         uint256 tokensToMint
     );
@@ -117,21 +119,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
         signerRole = newSigner;
     }
 
-    /// @notice Executes a multipurpose transaction
-    /// @param tokensToBurn Token ids array to be burned
-    /// @param tokensToMint Number of tokens to mint
-    /// @param mintReceiver Address - receiver of new minted tokens
-    /// @param ptFromAccount Address of ERC20 token to transfer from executor address
-    /// @param ptFromAccountReceivers `ptFromAccount` Receivers Addresses array 
-    /// @param fromAccountAmounts `ptFromAccount` Amounts array 
-    /// @param ptFromContract Address of ERC20 token to transfer from contract addresss
-    /// @param ptFromContractReceivers `ptFromContract` Receivers Addresses array 
-    /// @param fromContractAmounts `ptFromContract` Amounts array 
-    /// @param nonce Uniqe id of transaction
-    /// @param deadline Unix Timestamp after which the transaction cannot be executed
-    /// @param signature A signature of transaction parameters with the private key of a valid signer
-    /// @dev address(0) is used to set native currency as ptFromAccount or ptFromContract.
-    function execTransaction(
+    function checkSignature(
         uint256[] memory tokensToBurn,
         uint256 tokensToMint,
         address mintReceiver,
@@ -144,15 +132,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
         uint256 nonce,
         uint256 deadline,
         bytes memory signature
-    ) external payable {
-        require(mintReceiver != address(0), "Iguverse: Receiver address zero");
-        require(!isNonceUsed[nonce], "Iguverse: Nonce already used");
-        require(
-            block.timestamp <= deadline,
-            "Iguverse: Transaction overdue"
-        );
-        isNonceUsed[nonce] = true;
-
+    ) internal view {
         bytes32 typedHash = _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -174,10 +154,58 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
                 )
             )
         );
-
         require(
             ECDSA.recover(typedHash, signature) == signerRole,
             "Iguverse: Signature Mismatch"
+        );
+    }
+
+    /// @notice Executes a multipurpose transaction
+    /// @param tokensToBurn Token ids array to be burned
+    /// @param tokensToMint Number of tokens to mint
+    /// @param mintReceiver Address - receiver of new minted tokens
+    /// @param ptFromAccount Address of ERC20 token to transfer from executor address
+    /// @param ptFromAccountReceivers `ptFromAccount` Receivers Addresses array
+    /// @param fromAccountAmounts `ptFromAccount` Amounts array
+    /// @param ptFromContract Address of ERC20 token to transfer from contract addresss
+    /// @param ptFromContractReceivers `ptFromContract` Receivers Addresses array
+    /// @param fromContractAmounts `ptFromContract` Amounts array
+    /// @param nonce Uniqe id of transaction
+    /// @param deadline Unix Timestamp after which the transaction cannot be executed
+    /// @param signature A signature of transaction parameters with the private key of a valid signer
+    /// @dev address(0) is used to set native currency as ptFromAccount or ptFromContract.
+    function execTransaction(
+        uint256[] memory tokensToBurn,
+        uint256 tokensToMint,
+        address mintReceiver,
+        address ptFromAccount,
+        address[] memory ptFromAccountReceivers,
+        uint256[] memory fromAccountAmounts,
+        address ptFromContract,
+        address[] memory ptFromContractReceivers,
+        uint256[] memory fromContractAmounts,
+        uint256 nonce,
+        uint256 deadline,
+        bytes memory signature
+    ) external payable {
+        require(mintReceiver != address(0), "Iguverse: Receiver address zero");
+        require(!isNonceUsed[nonce], "Iguverse: Nonce already used");
+        require(block.timestamp <= deadline, "Iguverse: Transaction overdue");
+        isNonceUsed[nonce] = true;
+
+        checkSignature(
+            tokensToBurn,
+            tokensToMint,
+            mintReceiver,
+            ptFromAccount,
+            ptFromAccountReceivers,
+            fromAccountAmounts,
+            ptFromContract,
+            ptFromContractReceivers,
+            fromContractAmounts,
+            nonce,
+            deadline,
+            signature
         );
 
         if (tokensToBurn.length != 0) {
@@ -189,8 +217,14 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
             emit TokensBurned(nonce, msg.sender, tokensToBurn);
         }
         if (tokensToMint != 0) {
+            emit TokensMinted(
+                nonce,
+                msg.sender,
+                mintReceiver,
+                _nextTokenId(),
+                tokensToMint
+            );
             _mint(mintReceiver, tokensToMint);
-            emit TokensMinted(nonce, mintReceiver, _nextTokenId(), tokensToMint);
         }
         if (
             (ptFromAccountReceivers.length != 0) &&
@@ -252,7 +286,10 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
                 for (uint256 i = 0; i < ptFromContractReceivers.length; i++) {
                     sum += fromContractAmounts[i];
                 }
-                require(address(this).balance >= sum, "Iguverse: Contract: Not enough BNB");
+                require(
+                    address(this).balance >= sum,
+                    "Iguverse: Contract: Not enough BNB"
+                );
                 for (uint256 i = 0; i < ptFromContractReceivers.length; i++) {
                     Address.sendValue(
                         payable(ptFromContractReceivers[i]),
@@ -292,8 +329,7 @@ contract Iguverse is ERC721AQueryable, ERC721ABurnable, Ownable, EIP712 {
         }
     }
 
-    receive() external payable{
-    }
+    receive() external payable {}
 
     /// @notice Mints `quantity` tokens to `to` address
     /// @dev Only Owner can execute this function
