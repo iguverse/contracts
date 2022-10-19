@@ -62,6 +62,7 @@
     "web3": "^1.7.3"
   },
   "dependencies": {
+    "@chainlink/contracts": "^0.5.1",
     "@ethersproject/contracts": "^5.6.2",
     "@gregoranders/csv": "^0.0.9",
     "@openzeppelin/contracts": "^4.6.0",
