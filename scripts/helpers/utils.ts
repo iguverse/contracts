@@ -36,5 +36,3 @@ export async function deployAndVerify(
   }
   return contract;
 }
-
-export default { deployAndVerify };
