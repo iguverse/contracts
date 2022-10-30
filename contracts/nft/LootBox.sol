@@ -65,7 +65,8 @@ contract LootBox is
         uint256 indexed nonce,
         address indexed executor,
         address indexed mintReceiver,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 tokensToMint
     );
 
     /// @notice Emitted when transferring tokens or native currency in transaction
@@ -284,6 +285,7 @@ contract LootBox is
     /// @dev address(0) is used to set native currency as ptFromAccount
     function getToken(
         address mintReceiver,
+        uint256 tokensToMint,
         address ptFromAccount,
         address[] memory ptFromAccountReceivers,
         uint256[] memory fromAccountAmounts,
@@ -300,9 +302,10 @@ contract LootBox is
             keccak256(
                 abi.encode(
                     keccak256(
-                        "RequestToken(address mintReceiver,address ptFromAccount,address[] ptFromAccountReceivers,uint256[] fromAccountAmounts,address executor,uint256 nonce,uint256 deadline)"
+                        "RequestToken(address mintReceiver,uint256 tokensToMint,address ptFromAccount,address[] ptFromAccountReceivers,uint256[] fromAccountAmounts,address executor,uint256 nonce,uint256 deadline)"
                     ),
                     mintReceiver,
+                    tokensToMint,
                     ptFromAccount,
                     keccak256(abi.encodePacked(ptFromAccountReceivers)),
                     keccak256(abi.encodePacked(fromAccountAmounts)),
@@ -319,8 +322,8 @@ contract LootBox is
 
         paymentReceive(ptFromAccount, ptFromAccountReceivers, fromAccountAmounts, nonce);
 
-        emit TokensMinted(nonce, msg.sender, mintReceiver, _nextTokenId());
-        _mint(mintReceiver, 1);
+        emit TokensMinted(nonce, msg.sender, mintReceiver, _nextTokenId(), tokensToMint);
+        _mint(mintReceiver, tokensToMint);
     }
 
     /// @notice Mints `quantity` tokens to `to` address
