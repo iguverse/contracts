@@ -11,7 +11,7 @@ import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import { deployContract, txExec } from "./helpers/utils";
 
-describe("Igu ERC20 token vesting", function () {
+describe("Iguverse", function () {
   let owner: SignerWithAddress;
   let signer: SignerWithAddress;
   let bob: SignerWithAddress;
