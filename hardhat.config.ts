@@ -76,7 +76,7 @@ const config: HardhatUserConfig = {
       deploy: ["deploy/bsc/"],
     },
     bsc: {
-      url: process.env.BSC_URL || "",
+      url: process.env.BSCMAINNET_URL || "",
       chainId: 56,
       accounts: {
         mnemonic:
