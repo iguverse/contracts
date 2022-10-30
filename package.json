@@ -13,7 +13,7 @@
     "node": "npx hardhat node",
     "mainnet": "npx hardhat deploy --network bsc",
     "testnet": "npx hardhat deploy --network bsctestnet",
-    "verify": "npx hardhat --network bsctestnet etherscan-verify"
+    "verify": "npx hardhat --network bsc etherscan-verify"
   },
   "author": "",
   "license": "ISC",
