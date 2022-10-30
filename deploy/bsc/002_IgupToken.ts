@@ -13,7 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     signer = process.env.SIGNER_ADDRESS_TESTNET;
   }
   if (chainId === "56") {
-    signer = process.env.SIGNER_ADDRESS_TESTNET;
+    signer = process.env.SIGNER_ADDRESS_MAINNET;
   }
 
   await deploy("IgupToken", {
