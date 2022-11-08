@@ -27,6 +27,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (chainId === "56") {
     signer = process.env.SIGNER_ADDRESS_MAINNET;
     uriUrl = process.env.URL_MAINNET;
+    vrfCordinator = "0xc587d9053cd1118f25F645F9E08BB98c9712A4EE";
+    keyHash =
+      "0x114f3da0a805b6a67d6e9cd2ec746f7028f1b7376365af575cfea3550dd1aa04";
+    subscriptionId = 0; // TODO: edit this
   }
 
   const params = [
