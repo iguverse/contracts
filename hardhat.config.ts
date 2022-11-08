@@ -49,8 +49,8 @@ const config: HardhatUserConfig = {
     ],
   },
   namedAccounts: {
-    deployer: 0,
-    signer: 1,
+    deployer: 12,
+    signer: 13,
   },
   networks: {
     hardhat: {
