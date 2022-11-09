@@ -36,7 +36,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const params = [
     "Iguverse LootBox",
     "ILB",
-    uriUrl + "metadata/lootbox/",
+    uriUrl + "lootbox/nft/",
     signer,
     vrfCordinator,
     keyHash,
