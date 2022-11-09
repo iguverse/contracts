@@ -93,3 +93,9 @@ remixd -s ~/Projects/iguverse-contracts --remix-ide https://remix.ethereum.org
 #### TokenDistributor
 
 ```0xb085320eaBC561506E818CE1BFc35347076c1184```
+
+#### LootBox
+
+```
+0xccB77aEDEAB9c2defA271FFE253a09d9dC0569ae
+```
