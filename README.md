@@ -74,10 +74,6 @@ remixd -s ~/Projects/iguverse-contracts --remix-ide https://remix.ethereum.org
 
 ### Mainnet
 
-#### Crowdsale contract
-
-```0x80c0b0e2661404D5c48d00B5469538B418E6ed51```
-
 #### IGU token 
 
 ```0x201bC9F242f74C47Bbd898a5DC99cDCD81A21943```
@@ -96,6 +92,4 @@ remixd -s ~/Projects/iguverse-contracts --remix-ide https://remix.ethereum.org
 
 #### LootBox
 
-```
-0xccB77aEDEAB9c2defA271FFE253a09d9dC0569ae
-```
+```0xccB77aEDEAB9c2defA271FFE253a09d9dC0569ae```
