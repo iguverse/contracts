@@ -78,18 +78,28 @@ remixd -s ~/Projects/iguverse-contracts --remix-ide https://remix.ethereum.org
 
 ```0x201bC9F242f74C47Bbd898a5DC99cDCD81A21943```
 
+https://bscscan.com/token/0x201bC9F242f74C47Bbd898a5DC99cDCD81A21943
+
 #### IGUP token
 
 ```0x522d0F9F3eFF479A5B256BB1C1108F47b8e1A153```
+
+https://bscscan.com/token/0x522d0F9F3eFF479A5B256BB1C1108F47b8e1A153
 
 #### NFT token
 
 ```0x694733Ab1618A275D7E4b20d05fAaf450D56EfC6```
 
+https://bscscan.com/token/0x694733Ab1618A275D7E4b20d05fAaf450D56EfC6
+
 #### TokenDistributor
 
 ```0xb085320eaBC561506E818CE1BFc35347076c1184```
 
+https://bscscan.com/token/0xb085320eaBC561506E818CE1BFc35347076c1184
+
 #### LootBox
 
 ```0xccB77aEDEAB9c2defA271FFE253a09d9dC0569ae```
+
+https://bscscan.com/token/0xccB77aEDEAB9c2defA271FFE253a09d9dC0569ae
