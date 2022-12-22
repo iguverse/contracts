@@ -14,3 +14,4 @@ deployments/bsctestnet-prod
 deployments/bsctestnet-stage
 scripts/data/vesting.csv
 deployments/*
+.vscode

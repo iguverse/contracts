@@ -54,6 +54,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
+      blockGasLimit: 8000000,
       accounts: {
         mnemonic:
           process.env.MNEMONIC_TESTNET !== undefined
@@ -91,7 +92,7 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
-    // gasPrice: 100,
+    gasPrice: 5,
     token: "BNB",
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
   },
