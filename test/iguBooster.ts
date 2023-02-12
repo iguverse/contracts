@@ -63,7 +63,7 @@ describe("Igu Booster", function () {
         staker: bob.address,
         amount: ethers.utils.parseEther("1"),
         durationDays: 1,
-        deadline: timestamp + 15,
+        deadline: timestamp + 30,
       };
 
       const signature = await signer._signTypedData(domainData, types, value);
@@ -115,7 +115,7 @@ describe("Igu Booster", function () {
           staker: bob.address,
           amount: ethers.utils.parseEther("1"),
           durationDays: 1,
-          deadline: timestamp + 15 + 15,
+          deadline: timestamp + 30 + 15,
         };
 
         const signature = await signer._signTypedData(
@@ -175,7 +175,7 @@ describe("Igu Booster", function () {
       beforeEach(async () => {
         const block = await timetravel(timestamp + 106500);
         timestamp = block.timestamp;
-        [tx, recipt] = await txExec(iguBooster.connect(bob).unstake(1));
+        [tx, recipt] = await txExec(iguBooster.connect(bob).unstake());
       });
       it("Should emit Transfer event", async () => {
         await expect(tx)

@@ -32,6 +32,8 @@ describe("Igu ERC20 token vesting", function () {
 
     const previousBlock = await ethers.provider.getBlock("latest");
     blockTimestamp = previousBlock.timestamp;
+
+    contract.connect(owner).enable();
   });
 
   describe("Initial values", () => {
@@ -54,9 +56,9 @@ describe("Igu ERC20 token vesting", function () {
     });
 
     it("Should revert with VestingNotFound error", async () => {
-      await expect(contract.connect(alice).withdraw(0)).to.be.revertedWith(
-        "VestingNotFound()"
-      );
+      await expect(
+        contract.connect(alice).withdraw(alice.address, 0)
+      ).to.be.revertedWith("VestingNotFound()");
     });
   });
 
@@ -165,14 +167,6 @@ describe("Igu ERC20 token vesting", function () {
           );
         });
 
-        it("Should request tokens transfer", async () => {
-          expect(iguToken.transferFrom.getCall(0).args).to.be.eql([
-            owner.address,
-            contract.address,
-            ethers.utils.parseEther("35"),
-          ]);
-        });
-
         it("Should emit Transfer event", async () => {
           await expect(tx)
             .to.emit(iguToken, "Transfer")
@@ -189,20 +183,33 @@ describe("Igu ERC20 token vesting", function () {
         });
 
         it("Should return proper vesting info", async () => {
-          expect(await contract.vestingInfo(alice.address, 1)).to.eql([
-            ethers.utils.parseEther("5"),
-            BigNumber.from(0),
-            BigNumber.from(0),
-            BigNumber.from(blockTimestamp + 20000),
-            BigNumber.from(blockTimestamp + 100000),
-          ]);
-          expect(await contract.vestingInfo(bob.address, 0)).to.eql([
-            ethers.utils.parseEther("20"),
-            BigNumber.from(0),
-            ethers.utils.parseEther("5"),
-            BigNumber.from(blockTimestamp + 10000),
-            BigNumber.from(blockTimestamp + 50000),
-          ]);
+          const ret = await contract.vestingInfo(alice.address, 1);
+          expect(ret[0].toString()).to.be.eql(
+            ethers.utils.parseEther("5").toString()
+          );
+          expect(ret[1].toString()).to.be.eql("0");
+          expect(ret[2].toString()).to.be.eql("0");
+          expect(ret[3].toString()).to.be.eql(
+            (blockTimestamp + 20000).toString()
+          );
+          expect(ret[4].toString()).to.be.eql(
+            (blockTimestamp + 100000).toString()
+          );
+
+          const ret2 = await contract.vestingInfo(bob.address, 0);
+          expect(ret2[0].toString()).to.be.eql(
+            ethers.utils.parseEther("20").toString()
+          );
+          expect(ret2[1].toString()).to.be.eql("0");
+          expect(ret2[2].toString()).to.be.eql(
+            ethers.utils.parseEther("5").toString()
+          );
+          expect(ret2[3].toString()).to.be.eql(
+            (blockTimestamp + 10000).toString()
+          );
+          expect(ret2[4].toString()).to.be.eql(
+            (blockTimestamp + 50000).toString()
+          );
         });
 
         it("Should return proper amount available to claim", async () => {
@@ -274,13 +281,22 @@ describe("Igu ERC20 token vesting", function () {
       });
 
       it("Should return proper vesting info", async () => {
-        expect(await contract.vestingInfo(bob.address, 0)).to.eql([
-          ethers.utils.parseEther("20"),
-          ethers.utils.parseEther("0"),
-          ethers.utils.parseEther("5"),
-          BigNumber.from(blockTimestamp + 10000),
-          BigNumber.from(blockTimestamp + 50000),
-        ]);
+        const ret = await contract.vestingInfo(bob.address, 0);
+        expect(ret[0].toString()).to.be.eql(
+          ethers.utils.parseEther("20").toString()
+        );
+        expect(ret[1].toString()).to.be.eql(
+          ethers.utils.parseEther("0").toString()
+        );
+        expect(ret[2].toString()).to.be.eql(
+          ethers.utils.parseEther("5").toString()
+        );
+        expect(ret[3].toString()).to.be.eql(
+          (blockTimestamp + 10000).toString()
+        );
+        expect(ret[4].toString()).to.be.eql(
+          (blockTimestamp + 50000).toString()
+        );
       });
 
       describe("Withdraw initial vesting", () => {
@@ -288,14 +304,9 @@ describe("Igu ERC20 token vesting", function () {
         let recipt: ContractReceipt;
 
         beforeEach(async () => {
-          [tx, recipt] = await txExec(contract.connect(bob).withdraw(0));
-        });
-
-        it("Should request tokens transfer", async () => {
-          expect(iguToken.transfer.getCall(0).args).to.be.eql([
-            bob.address,
-            ethers.utils.parseEther("5.000375"),
-          ]);
+          [tx, recipt] = await txExec(
+            contract.connect(bob).withdraw(bob.address, 0)
+          );
         });
 
         it("Should emit Transfer event", async () => {
@@ -313,13 +324,22 @@ describe("Igu ERC20 token vesting", function () {
         });
 
         it("Should return proper vesting info", async () => {
-          expect(await contract.vestingInfo(bob.address, 0)).to.eql([
-            ethers.utils.parseEther("20"),
-            ethers.utils.parseEther("5.000375"),
-            ethers.utils.parseEther("5"),
-            BigNumber.from(blockTimestamp + 10000),
-            BigNumber.from(blockTimestamp + 50000),
-          ]);
+          const ret = await contract.vestingInfo(bob.address, 0);
+          expect(ret[0].toString()).to.be.eql(
+            ethers.utils.parseEther("20").toString()
+          );
+          expect(ret[1].toString()).to.be.eql(
+            ethers.utils.parseEther("5.000375").toString()
+          );
+          expect(ret[2].toString()).to.be.eql(
+            ethers.utils.parseEther("5").toString()
+          );
+          expect(ret[3].toString()).to.be.eql(
+            (blockTimestamp + 10000).toString()
+          );
+          expect(ret[4].toString()).to.be.eql(
+            (blockTimestamp + 50000).toString()
+          );
         });
 
         describe("after few moments", () => {
@@ -341,14 +361,9 @@ describe("Igu ERC20 token vesting", function () {
             let recipt: ContractReceipt;
 
             beforeEach(async () => {
-              [tx, recipt] = await txExec(contract.connect(bob).withdraw(0));
-            });
-
-            it("Should request tokens transfer", async () => {
-              expect(iguToken.transfer.getCall(1).args).to.be.eql([
-                bob.address,
-                ethers.utils.parseEther("0.375375"),
-              ]);
+              [tx, recipt] = await txExec(
+                contract.connect(bob).withdraw(bob.address, 0)
+              );
             });
 
             it("Should emit Transfer event", async () => {
@@ -366,13 +381,22 @@ describe("Igu ERC20 token vesting", function () {
             });
 
             it("Should return proper vesting info", async () => {
-              expect(await contract.vestingInfo(bob.address, 0)).to.eql([
-                ethers.utils.parseEther("20"),
-                ethers.utils.parseEther("5.375750"),
-                ethers.utils.parseEther("5"),
-                BigNumber.from(blockTimestamp + 10000),
-                BigNumber.from(blockTimestamp + 50000),
-              ]);
+              const ret = await contract.vestingInfo(bob.address, 0);
+              expect(ret[0].toString()).to.be.eql(
+                ethers.utils.parseEther("20").toString()
+              );
+              expect(ret[1].toString()).to.be.eql(
+                ethers.utils.parseEther("5.375750").toString()
+              );
+              expect(ret[2].toString()).to.be.eql(
+                ethers.utils.parseEther("5").toString()
+              );
+              expect(ret[3].toString()).to.be.eql(
+                (blockTimestamp + 10000).toString()
+              );
+              expect(ret[4].toString()).to.be.eql(
+                (blockTimestamp + 50000).toString()
+              );
             });
           });
         });
@@ -398,14 +422,9 @@ describe("Igu ERC20 token vesting", function () {
         let recipt: ContractReceipt;
 
         beforeEach(async () => {
-          [tx, recipt] = await txExec(contract.connect(bob).withdraw(0));
-        });
-
-        it("Should request tokens transfer", async () => {
-          expect(iguToken.transfer.getCall(0).args).to.be.eql([
-            bob.address,
-            ethers.utils.parseEther("20"),
-          ]);
+          [tx, recipt] = await txExec(
+            contract.connect(bob).withdraw(bob.address, 0)
+          );
         });
 
         it("Should emit Transfer event", async () => {
@@ -423,13 +442,22 @@ describe("Igu ERC20 token vesting", function () {
         });
 
         it("Should return proper vesting info", async () => {
-          expect(await contract.vestingInfo(bob.address, 0)).to.eql([
-            ethers.utils.parseEther("20"),
-            ethers.utils.parseEther("20"),
-            ethers.utils.parseEther("5"),
-            BigNumber.from(blockTimestamp + 10000),
-            BigNumber.from(blockTimestamp + 50000),
-          ]);
+          const ret = await contract.vestingInfo(bob.address, 0);
+          expect(ret[0].toString()).to.be.eql(
+            ethers.utils.parseEther("20").toString()
+          );
+          expect(ret[1].toString()).to.be.eql(
+            ethers.utils.parseEther("20").toString()
+          );
+          expect(ret[2].toString()).to.be.eql(
+            ethers.utils.parseEther("5").toString()
+          );
+          expect(ret[3].toString()).to.be.eql(
+            (blockTimestamp + 10000).toString()
+          );
+          expect(ret[4].toString()).to.be.eql(
+            (blockTimestamp + 50000).toString()
+          );
         });
       });
     });
@@ -452,14 +480,6 @@ describe("Igu ERC20 token vesting", function () {
         );
       });
 
-      it("Should request tokens transfer", async () => {
-        expect(iguToken.transferFrom.getCall(1).args).to.be.eql([
-          owner.address,
-          contract.address,
-          ethers.utils.parseEther("20"),
-        ]);
-      });
-
       it("Should emit Transfer event", async () => {
         await expect(tx)
           .to.emit(iguToken, "Transfer")
@@ -476,13 +496,23 @@ describe("Igu ERC20 token vesting", function () {
       });
 
       it("Should return proper vesting info", async () => {
-        expect(await contract.vestingInfo(alice.address, 2)).to.eql([
-          ethers.utils.parseEther("20"),
-          BigNumber.from(0),
-          BigNumber.from(0),
-          BigNumber.from(blockTimestamp + 100000),
-          BigNumber.from(blockTimestamp + 200000),
-        ]);
+
+        const ret = await contract.vestingInfo(alice.address, 2);
+        expect(ret[0].toString()).to.be.eql(
+          ethers.utils.parseEther("20").toString()
+        );
+        expect(ret[1].toString()).to.be.eql(
+          ethers.utils.parseEther("0").toString()
+        );
+        expect(ret[2].toString()).to.be.eql(
+          ethers.utils.parseEther("0").toString()
+        );
+        expect(ret[3].toString()).to.be.eql(
+          (blockTimestamp + 100000).toString()
+        );
+        expect(ret[4].toString()).to.be.eql(
+          (blockTimestamp + 200000).toString()
+        );
       });
     });
   });

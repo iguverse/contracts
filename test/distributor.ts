@@ -1,6 +1,9 @@
 import { IguToken } from "@/IguToken";
 import { TokenDistributor } from "@/TokenDistributor";
-import { ContractReceipt, ContractTransaction } from "@ethersproject/contracts/src.ts/index";
+import {
+  ContractReceipt,
+  ContractTransaction,
+} from "@ethersproject/contracts/src.ts/index";
 import { Network } from "@ethersproject/networks";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
