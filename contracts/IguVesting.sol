@@ -4,32 +4,25 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract IguVesting is
-    Ownable
-{
-
+contract IguVesting is Ownable {
     error ArrayLengthsMismatch(uint256 length);
     error InsufficientBalanceOrAllowance(uint256 required);
     error VestingNotFound();
     error VestingNotStartedYet();
     error ActivationAmountCantBeGreaterThanFullAmount();
-
+    error ClaimingDisabled();
 
     struct Vesting {
         /// @notice Total vesting amount (includes activation amount)
         uint256 vestingAmount;
-
         /// @notice Alread vested amount
         uint256 claimedAmount;
-
         /// @notice Activation amount - released fully after vesting start time
         uint256 activationAmount;
-
         /// @notice Vesting beginning time
-        uint64 timestampStart;
-
+        uint256 timestampStart;
         /// @notice Vesting ending time
-        uint64 timestampEnd;
+        uint256 timestampEnd;
     }
 
     /// @notice IGU ERC20 token
@@ -42,9 +35,18 @@ contract IguVesting is
     /// @notice Number of vestings for each account
     mapping(address => uint256) internal _slotsOf;
 
+    /// @notice Is Claiming Enabled
+    bool public isEnabled;
 
     constructor(IERC20 _tokenContractAddress) {
         _token = _tokenContractAddress;
+    }
+
+    /**
+     * @notice Enables claiming
+     */
+    function enable() external onlyOwner {
+        isEnabled = true;
     }
 
     /**
@@ -60,11 +62,10 @@ contract IguVesting is
      * @param _address Account
      * @param _slot Slot index
      */
-    function vestingInfo(address _address, uint256 _slot)
-        external
-        view
-        returns (Vesting memory)
-    {
+    function vestingInfo(
+        address _address,
+        uint256 _slot
+    ) external view returns (Vesting memory) {
         return _vesting[_address][_slot];
     }
 
@@ -72,11 +73,9 @@ contract IguVesting is
      * @dev Internal function.
      * Calculates vested amount available to claim (at the moment of execution)
      */
-    function _vestedAmount(Vesting memory vesting)
-        internal
-        view
-        returns (uint256)
-    {
+    function _vestedAmount(
+        Vesting memory vesting
+    ) internal view returns (uint256) {
         if (vesting.vestingAmount == 0) {
             return 0;
         }
@@ -87,13 +86,16 @@ contract IguVesting is
 
         if (block.timestamp >= vesting.timestampEnd) {
             // in case of exceeding end time
-            return vesting.vestingAmount-vesting.activationAmount;
+            return vesting.vestingAmount - vesting.activationAmount;
         }
 
-        uint256 vestingAmount = vesting.vestingAmount - vesting.activationAmount;
+        uint256 vestingAmount = vesting.vestingAmount -
+            vesting.activationAmount;
         uint256 vestingPeriod = vesting.timestampEnd - vesting.timestampStart;
-        uint256 timeSinceVestingStart = uint64(block.timestamp) - vesting.timestampStart;
-        uint256 unlockedAmount = vestingAmount * timeSinceVestingStart / vestingPeriod;
+        uint256 timeSinceVestingStart = block.timestamp -
+            vesting.timestampStart;
+        uint256 unlockedAmount = (vestingAmount * timeSinceVestingStart) /
+            vestingPeriod;
         return unlockedAmount;
     }
 
@@ -106,11 +108,7 @@ contract IguVesting is
     function available(
         address _address,
         uint256 _slot
-    )
-        public
-        view
-        returns (uint256)
-    {
+    ) public view returns (uint256) {
         Vesting memory vesting = _vesting[_address][_slot];
         uint256 unlocked = vesting.activationAmount + _vestedAmount(vesting);
         return unlocked - vesting.claimedAmount;
@@ -130,19 +128,16 @@ contract IguVesting is
     function addVestingEntries(
         address[] memory _addresses,
         uint256[] memory _amounts,
-        uint64[] memory _timestampStart,
-        uint64[] memory _timestampEnd,
+        uint256[] memory _timestampStart,
+        uint256[] memory _timestampEnd,
         uint256[] memory _initialUnlock
-    )
-        external
-        onlyOwner
-    {
+    ) external onlyOwner {
         uint256 len = _addresses.length;
         if (
-            len != _amounts.length
-            || len != _timestampStart.length
-            || len != _timestampEnd.length
-            || len != _initialUnlock.length
+            len != _amounts.length ||
+            len != _timestampStart.length ||
+            len != _timestampEnd.length ||
+            len != _initialUnlock.length
         ) {
             revert ArrayLengthsMismatch(len);
         }
@@ -154,7 +149,7 @@ contract IguVesting is
             // increase required amount to transfer
             tokensSum += _amounts[i];
 
-            if(_initialUnlock[i] > _amounts[i]){
+            if (_initialUnlock[i] > _amounts[i]) {
                 revert ActivationAmountCantBeGreaterThanFullAmount();
             }
 
@@ -172,8 +167,8 @@ contract IguVesting is
         }
 
         if (
-            _token.balanceOf(msg.sender) < tokensSum
-            || _token.allowance(msg.sender, address(this)) < tokensSum
+            _token.balanceOf(msg.sender) < tokensSum ||
+            _token.allowance(msg.sender, address(this)) < tokensSum
         ) {
             revert InsufficientBalanceOrAllowance(tokensSum);
         }
@@ -185,20 +180,22 @@ contract IguVesting is
      * @notice Withdraws available amount
      * @param _slot Vesting slot
      */
-    function withdraw(uint256 _slot) external
-    {
-        Vesting storage vesting = _vesting[msg.sender][_slot];
+    function withdraw(address to, uint256 _slot) external {
+        if (!isEnabled) {
+            revert ClaimingDisabled();
+        }
+
+        Vesting storage vesting = _vesting[to][_slot];
 
         if (vesting.vestingAmount == 0) {
             revert VestingNotFound();
         }
 
-        uint256 toWithdraw = available(msg.sender, _slot);
+        uint256 toWithdraw = available(to, _slot);
 
         vesting.claimedAmount += toWithdraw;
 
         // withdraw all available funds
-        _token.transfer(msg.sender, toWithdraw);
+        _token.transfer(to, toWithdraw);
     }
-
 }
