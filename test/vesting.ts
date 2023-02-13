@@ -55,10 +55,10 @@ describe("Igu ERC20 token vesting", function () {
       expect(await contract.available(alice.address, 0)).to.equal(0);
     });
 
-    it("Should revert with VestingNotFound error", async () => {
+    it("Should revert with NothingToClaim error", async () => {
       await expect(
         contract.connect(alice).withdraw(alice.address, 0)
-      ).to.be.revertedWith("VestingNotFound()");
+      ).to.be.revertedWith("NothingToClaim");
     });
   });
 
@@ -78,7 +78,7 @@ describe("Igu ERC20 token vesting", function () {
           [blockTimestamp + 50000],
           [0]
         )
-    ).to.be.revertedWith(`InsufficientBalanceOrAllowance(${amount})`);
+    ).to.be.revertedWith(`InsufficientBalanceOrAllowance`);
   });
 
   describe("with spending allowance", () => {
@@ -105,7 +105,7 @@ describe("Igu ERC20 token vesting", function () {
             [blockTimestamp + 50000],
             [0]
           )
-      ).to.be.revertedWith(`InsufficientBalanceOrAllowance(${amount})`);
+      ).to.be.revertedWith(`InsufficientBalanceOrAllowance`);
     });
 
     describe("Adding vesting informations", () => {
@@ -134,7 +134,7 @@ describe("Igu ERC20 token vesting", function () {
               [blockTimestamp + 50000],
               [0]
             )
-        ).to.be.revertedWith("ArrayLengthsMismatch(2)");
+        ).to.be.revertedWith("ArrayLengthsMismatch");
       });
 
       describe("successfully", () => {
@@ -216,6 +216,9 @@ describe("Igu ERC20 token vesting", function () {
           expect(await contract.available(alice.address, 0)).to.equal(0);
           expect(await contract.available(bob.address, 0)).to.equal(
             ethers.utils.parseEther("5")
+          );
+          expect(await contract.available(bob.address, 1)).to.equal(
+            ethers.utils.parseEther("0")
           );
         });
       });

@@ -5,12 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract IguVesting is Ownable {
-    error ArrayLengthsMismatch(uint256 length);
-    error InsufficientBalanceOrAllowance(uint256 required);
-    error VestingNotFound();
-    error VestingNotStartedYet();
-    error ActivationAmountCantBeGreaterThanFullAmount();
-    error ClaimingDisabled();
+    event Withdrawn(address indexed to, uint256 indexed slot, uint256 amount);
 
     struct Vesting {
         /// @notice Total vesting amount (includes activation amount)
@@ -70,6 +65,21 @@ contract IguVesting is Ownable {
     }
 
     /**
+     * @notice Returns vesting information
+     * @param _address Account
+     */
+    function batchVestingInfo(
+        address _address
+    ) external view returns (Vesting[] memory) {
+        Vesting[] memory vestings = new Vesting[](_slotsOf[_address]);
+        for (uint256 i = 0; i < _slotsOf[_address]; i++) {
+            Vesting memory v = _vesting[_address][i];
+            vestings[i] = v;
+        }
+        return vestings;
+    }
+
+    /**
      * @dev Internal function.
      * Calculates vested amount available to claim (at the moment of execution)
      */
@@ -115,6 +125,22 @@ contract IguVesting is Ownable {
     }
 
     /**
+     * @notice Returns amount available to claim for all slots
+     * @param _address Owner account
+     * @return amount available to withdraw
+     */
+    function batchAvailable(address _address) public view returns (uint256) {
+        uint256 sum = 0;
+        for (uint256 i = 0; i < _slotsOf[_address]; i++) {
+            Vesting memory vesting = _vesting[_address][i];
+            uint256 unlocked = vesting.activationAmount +
+                _vestedAmount(vesting);
+            sum += unlocked - vesting.claimedAmount;
+        }
+        return sum;
+    }
+
+    /**
      * @notice Adds vesting informations.
      * In case of linear vesting of 200 tokens and intial unlock of 50 tokens
      *      _amounts[i] should contain 200
@@ -133,14 +159,13 @@ contract IguVesting is Ownable {
         uint256[] memory _initialUnlock
     ) external onlyOwner {
         uint256 len = _addresses.length;
-        if (
-            len != _amounts.length ||
-            len != _timestampStart.length ||
-            len != _timestampEnd.length ||
-            len != _initialUnlock.length
-        ) {
-            revert ArrayLengthsMismatch(len);
-        }
+        require(
+            len == _amounts.length &&
+                len == _timestampStart.length &&
+                len == _timestampEnd.length &&
+                len == _initialUnlock.length,
+            "ArrayLengthsMismatch"
+        );
 
         uint256 tokensSum;
         for (uint256 i = 0; i < len; i++) {
@@ -149,9 +174,7 @@ contract IguVesting is Ownable {
             // increase required amount to transfer
             tokensSum += _amounts[i];
 
-            if (_initialUnlock[i] > _amounts[i]) {
-                revert ActivationAmountCantBeGreaterThanFullAmount();
-            }
+            require (_initialUnlock[i] <= _amounts[i], "ActivationAmountCantBeGreaterThanFullAmount");
 
             Vesting memory vesting = Vesting(
                 _amounts[i],
@@ -166,36 +189,57 @@ contract IguVesting is Ownable {
             _slotsOf[account]++;
         }
 
-        if (
-            _token.balanceOf(msg.sender) < tokensSum ||
-            _token.allowance(msg.sender, address(this)) < tokensSum
-        ) {
-            revert InsufficientBalanceOrAllowance(tokensSum);
-        }
+        require (
+            _token.balanceOf(msg.sender) >= tokensSum &&
+            _token.allowance(msg.sender, address(this)) >= tokensSum
+        ,
+            "InsufficientBalanceOrAllowance"
+        );
 
         _token.transferFrom(msg.sender, address(this), tokensSum);
     }
 
     /**
      * @notice Withdraws available amount
+     * @param to User address
      * @param _slot Vesting slot
      */
     function withdraw(address to, uint256 _slot) external {
-        if (!isEnabled) {
-            revert ClaimingDisabled();
-        }
+        require (_withdraw(to, _slot), "NothingToClaim");
+    }
+
+    /**
+     * @notice Withdraws available amount
+     * @param to User address
+     * @param _slot Vesting slot
+     */
+    function _withdraw(address to, uint256 _slot) internal returns (bool) {
+        require (isEnabled, "ClaimingDisabled");
 
         Vesting storage vesting = _vesting[to][_slot];
 
-        if (vesting.vestingAmount == 0) {
-            revert VestingNotFound();
-        }
-
         uint256 toWithdraw = available(to, _slot);
 
-        vesting.claimedAmount += toWithdraw;
-
         // withdraw all available funds
-        _token.transfer(to, toWithdraw);
+        if (toWithdraw > 0) {
+            vesting.claimedAmount += toWithdraw;
+            _token.transfer(to, toWithdraw);
+            emit Withdrawn(to, _slot, toWithdraw);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @notice Withdraws available amounts of first five slots
+     * @param to User address
+     */
+    function batchWithdraw(address to) external {
+        bool success;
+        for (uint256 i = 0; i < _slotsOf[to]; i++) {
+            bool ret = _withdraw(to, i);
+            success = ret || success;
+        }
+        require (success, "NothingToClaim");
     }
 }
