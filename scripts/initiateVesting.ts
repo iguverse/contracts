@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, userConfig } from "hardhat";
 import * as hre from "hardhat";
 import Parser from "@gregoranders/csv";
 import fs from "fs";
@@ -95,7 +95,9 @@ async function main() {
     });
 
     const checkBalance = await iguVesting.slotsOf(addresses[0]);
-    if (checkBalance.gt(0)) {
+    const maxNum = vestings.map((e) => e.address === addresses[0]).length;
+
+    if (checkBalance.gte(maxNum)) {
       console.log(
         "Address already initialed. Stopped initiating, please resolve conflict: remove sent rows"
       );
