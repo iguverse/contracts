@@ -13,5 +13,6 @@ deployments/bsctestnet
 deployments/bsctestnet-prod
 deployments/bsctestnet-stage
 scripts/data/vesting.csv
-deployments/*
+deployments/hardhat
+deployments/local
 .vscode
