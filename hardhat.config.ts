@@ -49,8 +49,8 @@ const config: HardhatUserConfig = {
     ],
   },
   namedAccounts: {
-    deployer: 12,
-    signer: 13,
+    deployer: 0,
+    signer: 0,
   },
   networks: {
     hardhat: {
@@ -67,24 +67,14 @@ const config: HardhatUserConfig = {
     bsctestnet: {
       url: process.env.BSCTESTNET_URL || "",
       chainId: 97,
-      accounts: {
-        mnemonic:
-          process.env.MNEMONIC_TESTNET !== undefined
-            ? process.env.MNEMONIC_TESTNET
-            : "",
-      },
+      accounts: [process.env.OWNER_PRIVATE_KEY],
       saveDeployments: true,
       deploy: ["deploy/bsc/"],
     },
     bsc: {
       url: process.env.BSCMAINNET_URL || "",
       chainId: 56,
-      accounts: {
-        mnemonic:
-          process.env.MNEMONIC_MAINNET !== undefined
-            ? process.env.MNEMONIC_MAINNET
-            : "",
-      },
+      accounts: [process.env.OWNER_PRIVATE_KEY],
       saveDeployments: true,
       deploy: ["deploy/bsc/"],
     },

@@ -16,7 +16,8 @@
               "artifacts/*",
               "typechain/*"
           ]
-      }
+      },
+      "resolveJsonModule": true,
   },
   "include": [
       "./scripts",

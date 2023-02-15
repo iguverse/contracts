@@ -6,6 +6,7 @@ import * as path from "path";
 import { BigNumber } from "ethers";
 import { IguVesting } from "@/IguVesting";
 import { IguToken } from "@/IguToken";
+import { parseEther } from "ethers/lib/utils";
 
 const csvFilePath = path.resolve(__dirname, "./data/vesting.csv");
 
@@ -16,18 +17,6 @@ type VestingInfo = {
   endDate: number;
   initialUnlock: BigNumber;
 };
-
-function swapMonth(value) {
-  return (
-    value.substr(3, 2) +
-    "." +
-    value.substr(0, 2) +
-    "." +
-    value.substr(6, 4) +
-    " " +
-    value.substr(11, 18)
-  );
-}
 
 function getChunks(array, chunkSize): any[] {
   let chunks = [];
@@ -47,10 +36,10 @@ let vestings: VestingInfo[] | any[] = [];
 for (let i = 1; i < rows.length; i++) {
   const row = rows[i];
   const address = row[0];
-  const totalAmount = ethers.utils.parseEther(row[3]);
-  const initialUnlock = ethers.utils.parseEther(row[9]);
-  const startDateX = new Date(swapMonth(row[5]));
-  const endDateX = new Date(swapMonth(row[6]));
+  const totalAmount = ethers.utils.parseEther(row[1]);
+  const initialUnlock = ethers.utils.parseEther(row[3]);
+  const startDateX = new Date(row[6]);
+  const endDateX = new Date(row[7]);
   const startDate = Math.floor(startDateX.getTime() / 1000);
   const endDate = Math.floor(endDateX.getTime() / 1000);
   const vestingInfo: VestingInfo = {
@@ -79,6 +68,15 @@ async function main() {
     deploymentToken.address
   );
 
+  console.log("Sending Approve transaction");
+  const approve = await iguToken.approve(
+    iguVesting.address,
+    parseEther("400000000")
+  );
+  console.log("Waiting for approve transaction");
+  await approve.wait(5);
+  console.log("Approve confirmed");
+
   for (let i = 0; i < chunks.length; i++) {
     const chunk: VestingInfo[] = chunks[i];
 
@@ -96,14 +94,29 @@ async function main() {
       initialUnlock.push(e.initialUnlock);
     });
 
-    await iguVesting.addVestingEntries(
+    const checkBalance = await iguVesting.slotsOf(addresses[0]);
+    if (checkBalance.gt(0)) {
+      console.log(
+        "Address already initialed. Stopped initiating, please resolve conflict: remove sent rows"
+      );
+      return;
+    }
+
+    console.log("Sending transaction # " + (i + 1) + " / " + chunks.length);
+    const tz = await iguVesting.addVestingEntries(
       addresses,
       amounts,
       startDate,
       endDate,
       initialUnlock
     );
+    await tz.wait(2);
+    console.log(i, "Added vesting, tz hash: ", tz.hash);
+    console.log("---------------------------------");
   }
+
+  // TODO: remove
+  // await iguVesting.setStatus();
 }
 
 main().catch((error) => {
