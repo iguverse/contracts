@@ -40,8 +40,8 @@ contract IguVesting is Ownable {
     /**
      * @notice Enables claiming
      */
-    function enable() external onlyOwner {
-        isEnabled = true;
+    function setStatus(bool newStatus) external onlyOwner {
+        isEnabled = newStatus;
     }
 
     /**
