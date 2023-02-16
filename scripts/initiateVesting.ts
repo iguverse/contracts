@@ -10,6 +10,8 @@ import { parseEther } from "ethers/lib/utils";
 
 const csvFilePath = path.resolve(__dirname, "./data/vesting.csv");
 
+const timeGapHours = 20;
+
 type VestingInfo = {
   address: string;
   totalAmount: BigNumber;
@@ -86,11 +88,13 @@ async function main() {
     let endDate = [];
     let initialUnlock = [];
 
+    const timeGapInSeconds = timeGapHours * 60 * 60;
+
     chunk.map((e) => {
       addresses.push(e.address);
       amounts.push(e.totalAmount);
-      startDate.push(e.startDate);
-      endDate.push(e.endDate);
+      startDate.push(e.startDate + timeGapInSeconds);
+      endDate.push(e.endDate + timeGapInSeconds);
       initialUnlock.push(e.initialUnlock);
     });
 
