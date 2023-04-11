@@ -9,9 +9,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const chainId = await getChainId();
 
-  let { mainDeployer, signer } = await getNamedAccounts();
-
-  console.log(mainDeployer);
+  let { deployer, signer } = await getNamedAccounts();
 
   if (chainId === "97" && process.env.SIGNER_ADDRESS_TESTNET) {
     signer = process.env.SIGNER_ADDRESS_TESTNET;
@@ -23,7 +21,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const igupToken: Contract = await getDeployedContract("IgupToken");
 
   await deploy("IgupBooster", {
-    from: mainDeployer,
+    from: deployer,
     args: [igupToken.address, signer],
     log: true,
   });
