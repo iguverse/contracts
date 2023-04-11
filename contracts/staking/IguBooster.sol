@@ -13,32 +13,26 @@ contract IguBooster is Ownable, EIP712 {
         uint256 amount,
         uint256 duration,
         uint256 endDate,
-        uint256 indexed slot
+        uint256 oldAmount,
+        uint256 oldEndDate
     );
 
-    event Unstaked(address indexed staker, uint256 indexed slot);
+    event Unstaked(address indexed staker, uint256 amount);
 
     struct Stake {
-        address staker;
         uint256 amount;
         uint256 endDate;
-        bool unstaked;
     }
 
     IERC20 public token;
     address public signer;
 
-    Stake[] public stakes;
-    mapping(address => uint256[]) internal _stakesOf;
+    address[] public stakers;
+    mapping(address => Stake) internal _stakeOf;
     mapping(bytes => bool) internal _isSignatureUsed;
 
-    function stakesOf(address staker) external view returns (Stake[] memory) {
-        uint256 len = _stakesOf[staker].length;
-        Stake[] memory stakesArray = new Stake[](len);
-        for(uint256 i=0;i<len;i++){
-            stakesArray[i] = stakes[_stakesOf[staker][i]];
-        }
-        return stakesArray;
+    function stakeOf(address staker) external view returns (Stake memory) {
+        return _stakeOf[staker];
     }
 
     constructor(IERC20 tokenContract, address signerAddress)
@@ -46,18 +40,23 @@ contract IguBooster is Ownable, EIP712 {
     {
         token = tokenContract;
         signer = signerAddress;
-        stakes.push(Stake(address(0), 0, 0, false));
     }
 
-    function _createNewStake(
+    function _updateStake(
         uint256 amount,
         uint256 durationDays
     ) internal{
-        uint256 len = stakes.length;
+        Stake memory s = _stakeOf[msg.sender];
         uint256 endDate = block.timestamp + durationDays * 1 days;
-        stakes.push(Stake(msg.sender, amount, endDate, false));
-        _stakesOf[msg.sender].push(len);
-        emit Staked(msg.sender, amount, durationDays, endDate, len);
+        if(endDate < s.endDate){
+            endDate = s.endDate;
+        }
+        if(s.endDate == 0){
+            stakers.push(msg.sender);
+        }
+        uint256 newAmount = amount + s.amount;
+        _stakeOf[msg.sender] = Stake({amount: newAmount, endDate: endDate});
+        emit Staked(msg.sender, newAmount, durationDays, endDate, s.amount, s.endDate);
     }
 
     function stake(
@@ -89,8 +88,6 @@ contract IguBooster is Ownable, EIP712 {
             "IguBooster: Signature Mismatch"
         );
 
-        _createNewStake(amount, durationDays);
-
         require(
             token.balanceOf(msg.sender) >= amount,
             "IguBooster: Not enought balance"
@@ -100,18 +97,19 @@ contract IguBooster is Ownable, EIP712 {
             "IguBooster: Allowance not enough"
         );
         token.transferFrom(msg.sender, address(this), amount);
+
+        _updateStake(amount, durationDays);
     }
 
-    function unstake(uint256 slot) external {
-        Stake memory s = stakes[slot];
-        require(s.staker == msg.sender, "IguBooster: Address is not owner of stake");
+    function unstake() external {
+        Stake memory s = _stakeOf[msg.sender];
         require(
             block.timestamp >= s.endDate,
             "IguBooster: Stake period is not ended"
         );
-        stakes[slot].unstaked = true;
+        _stakeOf[msg.sender] = Stake({amount: 0, endDate: 0});
         token.transfer(msg.sender, s.amount);
-        emit Unstaked(msg.sender, slot);
+        emit Unstaked(msg.sender, s.amount);
     }
 
     /// @notice Rewrites Signer Address
