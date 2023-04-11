@@ -1,11 +1,10 @@
-import { IguToken } from "@/IguToken";
-import { IguVesting } from "@/IguVesting";
 import { MockContract } from "@defi-wonderland/smock/dist/src/types";
 import { ContractReceipt } from "@ethersproject/contracts/src.ts/index";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BigNumber, ContractTransaction } from "ethers";
 import { ethers } from "hardhat";
+import { IguToken, IguVesting } from "../typechain-types";
 import {
   assertIsAvailableOnlyForOwner,
   deployContract,
@@ -33,7 +32,7 @@ describe("Igu ERC20 token vesting", function () {
     const previousBlock = await ethers.provider.getBlock("latest");
     blockTimestamp = previousBlock.timestamp;
 
-    contract.connect(owner).enable();
+    contract.connect(owner).setStatus(true);
   });
 
   describe("Initial values", () => {

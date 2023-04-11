@@ -1,5 +1,3 @@
-import { IguBooster } from "@/IguBooster";
-import { IguToken } from "@/IguToken";
 import {
   ContractReceipt,
   ContractTransaction,
@@ -8,6 +6,7 @@ import { Network } from "@ethersproject/networks";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { IguBooster, IguToken } from "../typechain-types";
 import { deployContract, txExec, timetravel } from "./helpers/utils";
 
 let timestamp = Math.floor(Date.now() / 1000);

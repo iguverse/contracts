@@ -1,5 +1,3 @@
-import { IguToken } from "@/IguToken";
-import { Iguverse } from "@/Iguverse";
 import {
   ContractReceipt,
   ContractTransaction,
@@ -9,6 +7,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
+import { IguToken, Iguverse } from "../typechain-types";
 import { deployContract, txExec } from "./helpers/utils";
 
 describe("Iguverse", function () {

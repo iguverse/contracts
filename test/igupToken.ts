@@ -1,4 +1,3 @@
-import { IgupToken } from "@/IgupToken";
 import {
   ContractReceipt,
   ContractTransaction,
@@ -7,6 +6,7 @@ import { Network } from "@ethersproject/networks";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { IgupToken } from "../typechain-types";
 import { deployContract, txExec } from "./helpers/utils";
 
 describe("Igup Token", function () {

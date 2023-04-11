@@ -1,5 +1,3 @@
-import { IguToken } from "@/IguToken";
-import { TokenDistributor } from "@/TokenDistributor";
 import {
   ContractReceipt,
   ContractTransaction,
@@ -8,6 +6,7 @@ import { Network } from "@ethersproject/networks";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { IgupToken, TokenDistributor } from "../typechain-types";
 import { deployContract, txExec } from "./helpers/utils";
 
 describe("Distributor", function () {
@@ -15,7 +14,7 @@ describe("Distributor", function () {
   let signer: SignerWithAddress;
   let bob: SignerWithAddress;
 
-  let iguToken: IguToken;
+  let iguToken: IgupToken;
   let tokenDistributor: TokenDistributor;
 
   let network: Network;

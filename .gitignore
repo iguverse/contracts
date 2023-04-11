@@ -15,4 +15,6 @@ deployments/bsctestnet-stage
 scripts/data/vesting.csv
 deployments/hardhat
 deployments/local
+deployments/localhost
 .vscode
+typechain-types

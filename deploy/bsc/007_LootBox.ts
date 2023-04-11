@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
-import { getDeployedContract } from "../helpers/utils";
+import { getDeployedContract } from "../../helpers/utils";
 import { Contract } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -17,7 +17,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   let subscriptionId = 0;
 
   if (chainId === "97") {
-    signer = process.env.SIGNER_ADDRESS_TESTNET;
+    signer = process.env.SIGNER_ADDRESS_TESTNET ? process.env.SIGNER_ADDRESS_TESTNET : signer;
     uriUrl = process.env.URL_TESTNET;
     vrfCordinator = "0x6A2AAd07396B36Fe02a22b33cf443582f682c82f";
     keyHash =
@@ -25,7 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     subscriptionId = 1967;
   }
   if (chainId === "56") {
-    signer = process.env.SIGNER_ADDRESS_MAINNET;
+    signer = process.env.SIGNER_ADDRESS_MAINNET ? process.env.SIGNER_ADDRESS_MAINNET : signer;
     uriUrl = process.env.URL_MAINNET;
     vrfCordinator = "0xc587d9053cd1118f25F645F9E08BB98c9712A4EE";
     keyHash =

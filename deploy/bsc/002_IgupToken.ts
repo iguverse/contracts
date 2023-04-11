@@ -9,10 +9,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   let { deployer, signer } = await getNamedAccounts();
 
-  if (chainId === "97") {
+  if (chainId === "97" && process.env.SIGNER_ADDRESS_TESTNET) {
     signer = process.env.SIGNER_ADDRESS_TESTNET;
   }
-  if (chainId === "56") {
+  if (chainId === "56" && process.env.SIGNER_ADDRESS_MAINNET) {
     signer = process.env.SIGNER_ADDRESS_MAINNET;
   }
 

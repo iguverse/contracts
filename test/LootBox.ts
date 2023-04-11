@@ -1,5 +1,3 @@
-import { IguToken } from "@/IguToken";
-import { LootBox } from "@/LootBox";
 import {
   ContractReceipt,
   ContractTransaction,
@@ -9,6 +7,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
+import { IguToken, LootBox } from "../typechain-types";
 import { deployContract, txExec } from "./helpers/utils";
 
 const testnetValues = {
