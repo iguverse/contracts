@@ -96,19 +96,19 @@ https://bscscan.com/token/0x694733Ab1618A275D7E4b20d05fAaf450D56EfC6
 
 ```0xb085320eaBC561506E818CE1BFc35347076c1184```
 
-https://bscscan.com/token/0xb085320eaBC561506E818CE1BFc35347076c1184
+https://bscscan.com/address/0xb085320eaBC561506E818CE1BFc35347076c1184
 
 #### IGU Wallet
 
 ```0xaf759Af05f4a03B3ff42F86Be58C4CD651542242```
 
-https://bscscan.com/token/0xaf759Af05f4a03B3ff42F86Be58C4CD651542242
+https://bscscan.com/address/0xaf759Af05f4a03B3ff42F86Be58C4CD651542242
 
 #### Staking IgupBooster
 
 ```0x2F9A670455E6E50Ee447f6Ea6e30E633DC42838D```
 
-https://bscscan.com/token/0x2F9A670455E6E50Ee447f6Ea6e30E633DC42838D
+https://bscscan.com/address/0x2F9A670455E6E50Ee447f6Ea6e30E633DC42838D
 
 
 #### LootBox
