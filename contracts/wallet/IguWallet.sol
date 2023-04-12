@@ -43,26 +43,29 @@ contract IguWallet is Ownable, EIP712 {
         uint256 amount,
         uint256 fee,
         uint256 nonce,
+        uint256 deadline,
         bytes memory signature
     ) external {
         require(
             !isNonceUsed[nonce],
             "IguWallet: Nonce already used"
         );
+        require(deadline>block.timestamp, "IguWallet: Transaction overdue");
         isNonceUsed[nonce] = true;
         bytes32 typedHash = _hashTypedDataV4(
             keccak256(
                 abi.encode(
                     keccak256(
-                        "WithdrawData(address walletAddress,uint256 amount,uint256 fee,uint256 nonce)"
+                        "WithdrawData(address walletAddress,uint256 amount,uint256 fee,uint256 nonce,uint256 deadline)"
                     ),
                     walletAddress,
                     amount,
                     fee,
-                    nonce
+                    nonce,
+                    deadline
                 )
             )
-        );
+        ); 
         require(
             ECDSA.recover(typedHash, signature) == signer,
             "IguWallet: Signature Mismatch"
